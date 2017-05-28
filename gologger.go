@@ -6,22 +6,24 @@ import (
 	"os"
 )
 
-type logger struct {
+type GoLogger struct {
 	LogLevel int
 	LogPath string
 	timeFormat string
 	isSetup bool
 }
 
-func (l *logger)setup() {
-	if l.timeFormat == "" {
-		l.timeFormat = time.UnixDate
-	}
+func (l *GoLogger)setup() {
+	if !l.isSetup {
+		if l.timeFormat == "" {
+			l.timeFormat = time.UnixDate
+		}
 
-	l.isSetup = true
+		l.isSetup = true
+	}
 }
 
-func (l *logger)log(a ...interface{}) {
+func (l *GoLogger)log(a ...interface{}) {
 	args := fmt.Sprint(a)
 	msg := time.Now().Format(time.UnixDate) + " :: " + args[1: len(args) - 1]
 	fmt.Println(msg)
@@ -43,13 +45,4 @@ func (l *logger)log(a ...interface{}) {
 			}
 		}(msg)
 	}
-}
-
-var l logger;
-func Log(a ...interface{}) {
-	if !l.isSetup {
-		l.setup()
-	}
-
-	l.log(a)
 }

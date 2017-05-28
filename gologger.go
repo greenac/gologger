@@ -23,7 +23,7 @@ func (l *GoLogger)Setup() {
 	}
 }
 
-func (l *GoLogger)log(a ...interface{}) {
+func (l *GoLogger)Log(a ...interface{}) {
 	args := fmt.Sprint(a)
 	msg := time.Now().Format(time.UnixDate) + " :: " + args[1: len(args) - 1]
 	fmt.Println(msg)

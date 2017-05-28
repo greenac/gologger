@@ -13,7 +13,7 @@ type GoLogger struct {
 	isSetup bool
 }
 
-func (l *GoLogger)setup() {
+func (l *GoLogger)Setup() {
 	if !l.isSetup {
 		if l.timeFormat == "" {
 			l.timeFormat = time.UnixDate

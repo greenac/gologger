@@ -20,6 +20,7 @@ type GoLogger struct {
 	isSetup bool
 }
 
+// TODO: Add support for different log levels
 func (l *GoLogger)Setup() {
 	if !l.isSetup {
 		if l.timeFormat == "" {
@@ -41,14 +42,9 @@ func (l *GoLogger)coloredOutput(ot outputType, a... interface{}) {
 	c.Println(a...)
 }
 
-func (l *GoLogger)Log(a ...interface{}) {
-	args := fmt.Sprint(a)
-	msg := time.Now().Format(time.UnixDate) + " :: " + args[2: len(args) - 2]
-	l.coloredOutput(outputNormal, msg)
-
-	// TODO: Add support for different log levels
+func (l *GoLogger)writeToFile(message string) {
 	if l.LogLevel == 1 {
-		go func(message string) {
+		go func(msg string) {
 			f, err:= os.OpenFile(l.LogPath, os.O_APPEND | os.O_WRONLY | os.O_CREATE, 0644)
 			if err != nil {
 				l.coloredOutput(outputError, "Error: could not write to octopus log file:", l.LogPath)
@@ -56,11 +52,26 @@ func (l *GoLogger)Log(a ...interface{}) {
 			}
 			defer f.Close()
 
-			message += "\n"
-			_, err = f.WriteString(message)
+			msg += "\n"
+			_, err = f.WriteString(msg)
 			if err != nil {
 				l.coloredOutput(outputError, "Error: failed to write message to log file:", l.LogPath)
 			}
-		}(msg)
+		}(message)
 	}
+}
+
+func (l *GoLogger)log(ot outputType, a ...interface{}) {
+	args := fmt.Sprint(a)
+	msg := time.Now().Format(time.UnixDate) + " :: " + args[3: len(args) - 3]
+	l.coloredOutput(ot, msg)
+	l.writeToFile(msg)
+}
+
+func (l *GoLogger)Log(a ...interface{}) {
+	l.log(outputNormal, a)
+}
+
+func (l *GoLogger)Error(a ...interface{}) {
+	l.Log(outputError, a)
 }

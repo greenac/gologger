@@ -1,9 +1,16 @@
 package gologger
 
 import (
-	"fmt"
 	"time"
 	"os"
+	"github.com/fatih/color"
+	"fmt"
+)
+
+type outputType int
+const (
+	outputError outputType = 1000
+	outputNormal outputType = 1001
 )
 
 type GoLogger struct {
@@ -23,17 +30,28 @@ func (l *GoLogger)Setup() {
 	}
 }
 
+func (l *GoLogger)coloredOutput(ot outputType, a... interface{}) {
+	var c *color.Color
+	if ot == outputError {
+		c = color.New(color.FgRed).Add(color.Bold)
+	} else {
+		c = color.New(color.FgCyan)
+	}
+
+	c.Println(a...)
+}
+
 func (l *GoLogger)Log(a ...interface{}) {
 	args := fmt.Sprint(a)
-	msg := time.Now().Format(time.UnixDate) + " :: " + args[1: len(args) - 1]
-	fmt.Println(msg)
+	msg := time.Now().Format(time.UnixDate) + " :: " + args[2: len(args) - 2]
+	l.coloredOutput(outputNormal, msg)
 
 	// TODO: Add support for different log levels
 	if l.LogLevel == 1 {
 		go func(message string) {
 			f, err:= os.OpenFile(l.LogPath, os.O_APPEND | os.O_WRONLY | os.O_CREATE, 0644)
 			if err != nil {
-				fmt.Println("Error: could not write to octopus log file:", l.LogPath)
+				l.coloredOutput(outputError, "Error: could not write to octopus log file:", l.LogPath)
 				return
 			}
 			defer f.Close()
@@ -41,7 +59,7 @@ func (l *GoLogger)Log(a ...interface{}) {
 			message += "\n"
 			_, err = f.WriteString(message)
 			if err != nil {
-				fmt.Println("Error: failed to write message to log file:", l.LogPath)
+				l.coloredOutput(outputError, "Error: failed to write message to log file:", l.LogPath)
 			}
 		}(msg)
 	}

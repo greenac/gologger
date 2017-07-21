@@ -11,6 +11,7 @@ type outputType int
 const (
 	outputError outputType = 1000
 	outputNormal outputType = 1001
+	outputWarning outputType = 1002
 )
 
 type GoLogger struct {
@@ -33,9 +34,12 @@ func (l *GoLogger)Setup() {
 
 func (l *GoLogger)coloredOutput(ot outputType, a... interface{}) {
 	var c *color.Color
-	if ot == outputError {
+	switch ot {
+	case outputError:
 		c = color.New(color.FgRed).Add(color.Bold)
-	} else {
+	case outputWarning:
+		c = color.New(color.FgYellow).Add(color.Bold)
+	default:
 		c = color.New(color.FgCyan)
 	}
 
@@ -74,4 +78,8 @@ func (l *GoLogger)Log(a ...interface{}) {
 
 func (l *GoLogger)Error(a ...interface{}) {
 	l.Log(outputError, a)
+}
+
+func (l *GoLogger)Warn(a ...interface{}) {
+	l.Log(outputWarning, a)
 }

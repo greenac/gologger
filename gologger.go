@@ -67,7 +67,14 @@ func (l *GoLogger)writeToFile(message string) {
 
 func (l *GoLogger)log(ot outputType, a ...interface{}) {
 	args := fmt.Sprint(a)
-	msg := time.Now().Format(time.UnixDate) + " :: " + args[3: len(args) - 3]
+	pre := ""
+	if ot == outputError {
+		pre = "ERROR: "
+	} else if ot == outputWarning {
+		pre = "WARNING: "
+	}
+
+	msg := time.Now().Format(time.UnixDate) + " :: " + pre + args[3: len(args) - 3]
 	l.coloredOutput(ot, msg)
 	l.writeToFile(msg)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"os"
+	"reflect"
 	"time"
 )
 
@@ -20,6 +21,16 @@ type GoLogger struct {
 	LogPath    string
 	timeFormat string
 	isSetup    bool
+}
+
+func innerElement(a []interface{}) []interface{} {
+	aa := a[0]
+	v := reflect.ValueOf(aa)
+	if v.Kind() != reflect.Slice {
+		return a
+	}
+
+	return innerElement(aa.([]interface{}))
 }
 
 // TODO: Add support for different log levels
@@ -73,7 +84,8 @@ func (l *GoLogger) writeToFile(message string) {
 
 func (l *GoLogger) log(ot outputType, a ...interface{}) {
 	l.Setup()
-	args := fmt.Sprint(a)
+	aa := innerElement(a)
+	args := fmt.Sprint(aa)
 	var pre string
 	switch ot {
 	case OutputError:
@@ -87,31 +99,7 @@ func (l *GoLogger) log(ot outputType, a ...interface{}) {
 		pre = ""
 	}
 
-	start := -1
-	end := -1
-	for i := 0; i < len(args)/2; i++ {
-		if start == -1 && args[i] != '[' {
-			start = i
-		}
-
-		if end == -1 && args[len(args) - i - 1] != ']' {
-			end = len(args) - i
-		}
-
-		if start != -1 && end != -1 {
-			break
-		}
-	}
-
-	if start == -1 {
-		start = 0
-	}
-
-	if end == -1 {
-		end = len(args)
-	}
-
-	msg := time.Now().Format(time.UnixDate) + " :: " + pre + args[start: end]
+	msg := time.Now().Format(time.UnixDate) + " :: " + pre + args[1: len(args) - 1]
 	l.coloredOutput(ot, msg)
 	l.writeToFile(msg)
 }

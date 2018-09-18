@@ -16,13 +16,6 @@ const (
 	OutputWarning outputType = 1002
 )
 
-type GoLogger struct {
-	LogLevel   outputType
-	LogPath    string
-	timeFormat string
-	isSetup    bool
-}
-
 func innerElement(a []interface{}) []interface{} {
 	aa := a[0]
 	v := reflect.ValueOf(aa)
@@ -31,6 +24,13 @@ func innerElement(a []interface{}) []interface{} {
 	}
 
 	return innerElement(aa.([]interface{}))
+}
+
+type GoLogger struct {
+	LogLevel   outputType
+	LogPath    string
+	timeFormat string
+	isSetup    bool
 }
 
 // TODO: Add support for different log levels

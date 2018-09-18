@@ -1,28 +1,40 @@
 package gologger
 
 import (
-	"time"
-	"os"
-	"github.com/fatih/color"
 	"fmt"
+	"github.com/fatih/color"
+	"os"
+	"reflect"
+	"time"
 )
 
 type outputType int
+
 const (
-	outputError outputType = 1000
-	outputNormal outputType = 1001
-	outputWarning outputType = 1002
+	OutputError   outputType = 1000
+	OutputNormal  outputType = 1001
+	OutputWarning outputType = 1002
 )
 
+func innerElement(a []interface{}) []interface{} {
+	aa := a[0]
+	v := reflect.ValueOf(aa)
+	if v.Kind() != reflect.Slice {
+		return a
+	}
+
+	return innerElement(aa.([]interface{}))
+}
+
 type GoLogger struct {
-	LogLevel int
-	LogPath string
+	LogLevel   outputType
+	LogPath    string
 	timeFormat string
-	isSetup bool
+	isSetup    bool
 }
 
 // TODO: Add support for different log levels
-func (l *GoLogger)Setup() {
+func (l *GoLogger) Setup() {
 	if !l.isSetup {
 		if l.timeFormat == "" {
 			l.timeFormat = time.UnixDate
@@ -32,12 +44,12 @@ func (l *GoLogger)Setup() {
 	}
 }
 
-func (l *GoLogger)coloredOutput(ot outputType, a... interface{}) {
+func (l *GoLogger) coloredOutput(ot outputType, a ...interface{}) {
 	var c *color.Color
 	switch ot {
-	case outputError:
+	case OutputError:
 		c = color.New(color.FgRed).Add(color.Bold)
-	case outputWarning:
+	case OutputWarning:
 		c = color.New(color.FgYellow).Add(color.Bold)
 	default:
 		c = color.New(color.FgCyan)
@@ -46,12 +58,17 @@ func (l *GoLogger)coloredOutput(ot outputType, a... interface{}) {
 	c.Println(a...)
 }
 
-func (l *GoLogger)writeToFile(message string) {
+func (l *GoLogger) writeToFile(message string) {
+	l.Setup()
+	if l.LogPath == "" {
+		return
+	}
+
 	if l.LogLevel == 1 {
 		go func(msg string) {
-			f, err:= os.OpenFile(l.LogPath, os.O_APPEND | os.O_WRONLY | os.O_CREATE, 0644)
+			f, err := os.OpenFile(l.LogPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 			if err != nil {
-				l.coloredOutput(outputError, "Error: could not write to octopus log file:", l.LogPath)
+				l.coloredOutput(OutputError, "Error: could not write to octopus log file:", l.LogPath)
 				return
 			}
 			defer f.Close()
@@ -59,34 +76,42 @@ func (l *GoLogger)writeToFile(message string) {
 			msg += "\n"
 			_, err = f.WriteString(msg)
 			if err != nil {
-				l.coloredOutput(outputError, "Error: failed to write message to log file:", l.LogPath)
+				l.coloredOutput(OutputError, "Error: failed to write message to log file:", l.LogPath)
 			}
 		}(message)
 	}
 }
 
-func (l *GoLogger)log(ot outputType, a ...interface{}) {
-	args := fmt.Sprint(a)
-	pre := ""
-	if ot == outputError {
+func (l *GoLogger) log(ot outputType, a ...interface{}) {
+	l.Setup()
+	aa := innerElement(a)
+	args := fmt.Sprint(aa)
+	var pre string
+	switch ot {
+	case OutputError:
 		pre = "ERROR: "
-	} else if ot == outputWarning {
+	case OutputWarning:
 		pre = "WARNING: "
+	case OutputNormal:
+		pre = ""
+	default:
+		fmt.Println("Error: output type:", ot, "is unknown")
+		pre = ""
 	}
 
-	msg := time.Now().Format(time.UnixDate) + " :: " + pre + args[3: len(args) - 3]
+	msg := time.Now().Format(time.UnixDate) + " :: " + pre + args[1: len(args) - 1]
 	l.coloredOutput(ot, msg)
 	l.writeToFile(msg)
 }
 
-func (l *GoLogger)Log(a ...interface{}) {
-	l.log(outputNormal, a)
+func (l *GoLogger) Log(a ...interface{}) {
+	l.log(OutputNormal, a)
 }
 
-func (l *GoLogger)Error(a ...interface{}) {
-	l.Log(outputError, a)
+func (l *GoLogger) Error(a ...interface{}) {
+	l.log(OutputError, a)
 }
 
-func (l *GoLogger)Warn(a ...interface{}) {
-	l.Log(outputWarning, a)
+func (l *GoLogger) Warn(a ...interface{}) {
+	l.log(OutputWarning, a)
 }

@@ -12,8 +12,9 @@ type outputType int
 
 const (
 	OutputError   outputType = 1000
-	OutputNormal  outputType = 1001
-	OutputWarning outputType = 1002
+	OutputDebug   outputType = 1001
+	OutputNormal  outputType = 1002
+	OutputWarning outputType = 1003
 )
 
 func innerElement(a []interface{}) []interface{} {
@@ -47,6 +48,8 @@ func (l *GoLogger) Setup() {
 func (l *GoLogger) coloredOutput(ot outputType, a ...interface{}) {
 	var c *color.Color
 	switch ot {
+	case OutputDebug:
+		c = color.New(color.FgHiMagenta).Add(color.Bold)
 	case OutputError:
 		c = color.New(color.FgRed).Add(color.Bold)
 	case OutputWarning:
@@ -93,13 +96,15 @@ func (l *GoLogger) log(ot outputType, a ...interface{}) {
 	case OutputWarning:
 		pre = "WARNING: "
 	case OutputNormal:
-		pre = ""
+		pre = "LOG: "
+	case OutputDebug:
+		pre = "DEBUG: "
 	default:
 		fmt.Println("Error: output type:", ot, "is unknown")
 		pre = ""
 	}
 
-	msg := time.Now().Format(time.UnixDate) + " :: " + pre + args[1: len(args) - 1]
+	msg := time.Now().Format(time.UnixDate) + " " + pre + args[1: len(args) - 1]
 	l.coloredOutput(ot, msg)
 	l.writeToFile(msg)
 }
@@ -110,6 +115,10 @@ func (l *GoLogger) Log(a ...interface{}) {
 
 func (l *GoLogger) Error(a ...interface{}) {
 	l.log(OutputError, a)
+}
+
+func (l *GoLogger) Debug(a ...interface{}) {
+	l.log(OutputDebug, a)
 }
 
 func (l *GoLogger) Warn(a ...interface{}) {

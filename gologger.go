@@ -67,22 +67,20 @@ func (l *GoLogger) writeToFile(message string) {
 		return
 	}
 
-	if l.LogLevel == 1 {
-		go func(msg string) {
-			f, err := os.OpenFile(l.LogPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-			if err != nil {
-				l.coloredOutput(OutputError, "Error: could not write to octopus log file:", l.LogPath)
-				return
-			}
-			defer f.Close()
+	go func(msg string) {
+		f, err := os.OpenFile(l.LogPath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			l.coloredOutput(OutputError, "Error: could not write to octopus log file:", l.LogPath)
+			return
+		}
+		defer f.Close()
 
-			msg += "\n"
-			_, err = f.WriteString(msg)
-			if err != nil {
-				l.coloredOutput(OutputError, "Error: failed to write message to log file:", l.LogPath)
-			}
-		}(message)
-	}
+		msg += "\n"
+		_, err = f.WriteString(msg)
+		if err != nil {
+			l.coloredOutput(OutputError, "Error: failed to write message to log file:", l.LogPath)
+		}
+	}(message)
 }
 
 func (l *GoLogger) log(ot outputType, a ...interface{}) {

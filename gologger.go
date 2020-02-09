@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const ShowDebugKey = "GO_LOGGER_SHOW_DEBUG"
+
 type outputType int
 
 const (
@@ -32,6 +34,7 @@ type GoLogger struct {
 	LogPath    string
 	timeFormat string
 	isSetup    bool
+	showDebug  bool
 }
 
 // TODO: Add support for different log levels
@@ -41,6 +44,7 @@ func (l *GoLogger) Setup() {
 			l.timeFormat = time.UnixDate
 		}
 
+		l.showDebug = os.Getenv(ShowDebugKey) == "true"
 		l.isSetup = true
 	}
 }
@@ -116,7 +120,9 @@ func (l *GoLogger) Error(a ...interface{}) {
 }
 
 func (l *GoLogger) Debug(a ...interface{}) {
-	l.log(OutputDebug, a)
+	if l.showDebug {
+		l.log(OutputDebug, a)
+	}
 }
 
 func (l *GoLogger) Warn(a ...interface{}) {
